@@ -98,9 +98,9 @@ router.post('/register', [
       isVerified: false
     });
 
-    // generate and send OTP
+    // generate and send OTP (non-blocking so response is instant)
     const otp = await createOTP(email, 'register');
-    await sendOTPEmail(email, otp, 'register');
+    sendOTPEmail(email, otp, 'register').catch(err => console.error('OTP email error:', err.message));
 
     res.status(200).json({
       message: 'Verification code sent to your email',
@@ -194,9 +194,9 @@ router.post('/login', [
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // send login OTP
+    // send login OTP (non-blocking so response is instant)
     const otp = await createOTP(email, 'login');
-    await sendOTPEmail(email, otp, 'login');
+    sendOTPEmail(email, otp, 'login').catch(err => console.error('OTP email error:', err.message));
 
     res.json({
       message: 'Verification code sent to your email',
@@ -271,7 +271,7 @@ router.post('/forgot-password', [
     }
 
     const otp = await createOTP(email, 'reset');
-    await sendOTPEmail(email, otp, 'reset');
+    sendOTPEmail(email, otp, 'reset').catch(err => console.error('OTP email error:', err.message));
 
     res.json({ message: 'Password reset code sent to your email', email });
   } catch (err) {
@@ -338,7 +338,7 @@ router.post('/resend-otp', [
     const email = req.body.email.toLowerCase().trim();
     const { purpose } = req.body;
     const otp = await createOTP(email, purpose);
-    await sendOTPEmail(email, otp, purpose);
+    sendOTPEmail(email, otp, purpose).catch(err => console.error('OTP email error:', err.message));
     res.json({ message: 'A new verification code has been sent to your email' });
   } catch (err) {
     console.error('Resend OTP error:', err);
