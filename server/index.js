@@ -48,4 +48,22 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Keep-alive: self-ping every 12 minutes to prevent Railway from sleeping
+  if (process.env.NODE_ENV === 'production' && process.env.RAILWAY_PUBLIC_DOMAIN) {
+    const PING_URL = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/api/health`;
+    const INTERVAL = 12 * 60 * 1000; // 12 minutes
+
+    setInterval(async () => {
+      try {
+        const res = await fetch(PING_URL);
+        const data = await res.json();
+        console.log(`[keep-alive] pinged ${PING_URL} — status: ${data.status}`);
+      } catch (err) {
+        console.error(`[keep-alive] ping failed: ${err.message}`);
+      }
+    }, INTERVAL);
+
+    console.log(`[keep-alive] self-ping enabled — every 12 min → ${PING_URL}`);
+  }
 });
