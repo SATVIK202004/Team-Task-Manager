@@ -30,9 +30,8 @@ app.get('/api/health', (req, res) => {
       NODE_ENV: process.env.NODE_ENV || 'not set',
       MONGO_URI: process.env.MONGO_URI ? 'set' : 'MISSING',
       JWT_SECRET: process.env.JWT_SECRET ? 'set' : 'MISSING',
-      SMTP_HOST: process.env.SMTP_HOST || 'MISSING',
-      SMTP_USER: process.env.SMTP_USER ? 'set' : 'MISSING',
-      SMTP_PASS: process.env.SMTP_PASS ? 'set' : 'MISSING'
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? 'set' : 'MISSING',
+      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || 'MISSING'
     }
   });
 });
