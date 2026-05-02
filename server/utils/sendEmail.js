@@ -1,38 +1,81 @@
-const nodemailer = require('nodemailer');
+// SendGrid (Twilio) HTTP API for sending emails
+// Uses HTTPS (port 443) which works on Railway and all hosting platforms
 
-// create transporter lazily so env vars are guaranteed to be loaded
-let _transporter = null;
-function getTransporter() {
-  if (!_transporter) {
-    const port = parseInt(process.env.SMTP_PORT || '465');
-    _transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: port,
-      secure: port === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000
-    });
+const sgMail = require('@sendgrid/mail');
+
+// Initialize SendGrid with API key
+function initSendGrid() {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) {
+    console.warn('⚠️  SENDGRID_API_KEY not set — emails will be logged to console only');
+    return false;
   }
-  return _transporter;
+  sgMail.setApiKey(apiKey);
+  return true;
+}
+
+// Sender email — must match verified sender in SendGrid dashboard
+const SENDER_EMAIL = '2200040029ece@gmail.com';
+const SENDER_NAME = 'TaskFlow';
+
+async function sendEmailViaSendGrid(to, subject, htmlContent, textContent) {
+  const isReady = initSendGrid();
+
+  if (!isReady) {
+    console.log(`📧 [DRY RUN] Would send to: ${to} | Subject: ${subject}`);
+    return { dryRun: true };
+  }
+
+  const msg = {
+    to: to,
+    from: { email: SENDER_EMAIL, name: SENDER_NAME },
+    replyTo: { email: SENDER_EMAIL, name: SENDER_NAME },
+    subject: subject,
+    // Both text and html reduce spam score significantly
+    text: textContent || subject,
+    html: htmlContent,
+    // Mail settings to improve deliverability
+    mailSettings: {
+      bypassListManagement: { enable: false },
+      sandboxMode: { enable: false }
+    },
+    // Tracking settings — disable click tracking to avoid spam triggers
+    trackingSettings: {
+      clickTracking: { enable: false, enableText: false },
+      openTracking: { enable: false },
+      subscriptionTracking: { enable: false }
+    }
+  };
+
+  try {
+    const [response] = await sgMail.send(msg);
+    console.log(`✅ Email sent via SendGrid to ${to} — status: ${response.statusCode}`);
+    return response;
+  } catch (err) {
+    const body = err.response?.body;
+    const errMsg = body?.errors?.map(e => e.message).join(', ') || err.message;
+    console.error(`❌ SendGrid error: ${errMsg}`);
+    if (body) console.error('SendGrid response body:', JSON.stringify(body, null, 2));
+    throw new Error(errMsg);
+  }
 }
 
 // send OTP verification email
 async function sendOTPEmail(to, otp, purpose) {
   const subjects = {
-    register: 'Verify your TaskFlow account',
-    login: 'Your TaskFlow login verification code',
-    reset: 'Reset your TaskFlow password'
+    register: 'Your TaskFlow verification code',
+    login: 'Your TaskFlow login code',
+    reset: 'Your TaskFlow password reset code'
   };
 
   const messages = {
     register: `Thanks for signing up! Use the code below to verify your email and activate your account.`,
-    login: `We noticed a login attempt on your account. Use this code to complete your sign-in.`,
+    login: `Use this code to complete your sign-in to TaskFlow.`,
     reset: `You requested a password reset. Use the code below to set a new password.`
   };
+
+  // Plain text version (reduces spam score)
+  const textBody = `${SENDER_NAME}\n\n${messages[purpose]}\n\nYour verification code: ${otp}\n\nThis code expires in 15 minutes. Do not share it with anyone.\n\nIf you did not request this, you can safely ignore this email.`;
 
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f8f9fa; border-radius: 12px;">
@@ -50,27 +93,19 @@ async function sendOTPEmail(to, otp, purpose) {
   `;
 
   try {
-    await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to,
-      subject: subjects[purpose],
-      html: htmlBody
-    });
+    await sendEmailViaSendGrid(to, subjects[purpose], htmlBody, textBody);
+    console.log(`📨 OTP email delivered to ${to} [${purpose}]`);
   } catch (err) {
-    console.error('Email send failed:', err.message);
-    console.error('SMTP config:', {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER ? '***set***' : '***MISSING***',
-      pass: process.env.SMTP_PASS ? '***set***' : '***MISSING***',
-      from: process.env.SMTP_FROM || '***MISSING***'
-    });
-    throw err;
+    console.error(`OTP email to ${to} failed: ${err.message}`);
+    console.log(`[FALLBACK] OTP for ${to} [${purpose}]: ${otp} — email delivery failed, check SendGrid settings`);
+    // don't rethrow so the login/register flow still continues
   }
 }
 
 // send welcome email after account activation
 async function sendWelcomeEmail(to, name) {
+  const textBody = `Welcome to TaskFlow!\n\nHi ${name},\n\nYour account has been created and verified successfully. You are now part of TaskFlow — a collaborative platform for managing team projects and tracking tasks efficiently.\n\nWhat you can do now:\n- Create and manage projects\n- Add team members to collaborate\n- Assign tasks with priorities and deadlines\n- Track progress on your dashboard\n\nLog in anytime and start organizing your team's workflow.`;
+
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 36px; background: #f8f9fa; border-radius: 12px;">
       <h2 style="color: #635bff; margin-bottom: 4px;">Welcome to TaskFlow!</h2>
@@ -98,12 +133,7 @@ async function sendWelcomeEmail(to, name) {
   `;
 
   try {
-    await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to,
-      subject: `Welcome to TaskFlow, ${name}!`,
-      html: htmlBody
-    });
+    await sendEmailViaSendGrid(to, `Welcome to TaskFlow, ${name}!`, htmlBody, textBody);
   } catch (err) {
     console.error('Welcome email failed:', err.message);
     // don't rethrow — welcome email is non-critical
