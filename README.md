@@ -1,218 +1,133 @@
 # TaskFlow — Team Task Manager
 
-A collaborative team task management platform where users can create projects, assign tasks to members, and track progress through an intuitive dashboard. Built with role-based access control supporting Admin and Member roles.
+TaskFlow is a full-stack team task management app I built to streamline how small teams organize their projects and track work. It supports two roles — Admins who create projects and manage teams, and Members who handle their assigned tasks. The entire auth flow uses email-based OTP codes, so there are no passwords flying around in plain text after the initial login.
 
-**Live Demo:** [https://team-task-manager-production-9c87.up.railway.app](https://team-task-manager-production-9c87.up.railway.app)
+**Live:** [team-task-manager-production-9c87.up.railway.app](https://team-task-manager-production-9c87.up.railway.app)
 
 ---
 
-## Screenshots
+## What It Looks Like
 
-### Login & OTP Verification
-Two-step authentication with email-based OTP verification for secure access.
+**Login & OTP Verification** — Two-step auth with a 6-digit code sent to your email.
 
 ![Login Page](client/public/screenshots/login.png)
-
 ![OTP Verification](client/public/screenshots/otp-verification.png)
 
-### Dashboard
-Real-time overview showing task counts, status breakdown, overdue alerts, and recent activity.
+**Dashboard** — At a glance: how many tasks are pending, in progress, done, or overdue.
 
 ![Dashboard](client/public/screenshots/dashboard.png)
 
-### Project Management
-Create projects, invite team members by email, and organize work into focused workspaces.
+**Projects** — Create workspaces, invite people by email, and keep things organized.
 
 ![Projects](client/public/screenshots/projects.png)
 
-### Task Board
-Full task lifecycle management with priority levels, due dates, assignees, and status tracking.
+**Tasks** — The core of the app. Assign work, set priorities, track deadlines.
 
 ![Tasks](client/public/screenshots/tasks.png)
 
 ---
 
-## Features
+## What You Can Do
 
-- **User Authentication** — Signup and login with email OTP verification
-- **Password Recovery** — Forgot password flow with OTP-based reset
-- **Welcome Email** — Confirmation email sent after successful registration
-- **Project Management** — Create, update, and delete team projects
-- **Team Collaboration** — Add or remove members from projects using their email
-- **Task Tracking** — Create tasks with title, description, priority, status, due date, and assignee
-- **Status Workflow** — Move tasks through To Do → In Progress → Done
-- **Priority Levels** — Categorize tasks as Low, Medium, or High priority
-- **Overdue Detection** — Automatic highlighting of tasks past their due date
-- **Dashboard Analytics** — Visual stats for total, pending, active, completed, overdue, and high-priority tasks
-- **Search & Filter** — Find tasks by keyword, project, status, or priority
-- **Role-Based Access** — Admins manage projects and members; Members manage their own tasks
-- **Keep-Alive** — Self-ping mechanism prevents the server from sleeping during inactivity
+- Sign up and log in with email OTP verification
+- Reset your password if you forget it (also via OTP)
+- Get a welcome email when your account is verified
+- Create, edit, and delete projects
+- Invite team members to a project using their email
+- Create tasks with a title, description, priority level, due date, and assignee
+- Move tasks through the workflow: **To Do → In Progress → Done**
+- See overdue tasks highlighted automatically
+- Filter and search tasks by project, status, priority, or keyword
+- View dashboard stats — totals, breakdowns, and alerts
 
-### Role Permissions
+### Who Can Do What
 
 | Action | Admin | Member |
 |--------|:-----:|:------:|
-| Create / delete projects | ✔ | ✘ |
-| Add / remove team members | ✔ | ✘ |
+| Create or delete projects | ✔ | ✘ |
+| Add or remove team members | ✔ | ✘ |
 | Create tasks | ✔ | ✔ |
-| Update task status | ✔ | ✔ (assigned/own) |
+| Update task status | ✔ | ✔ (own/assigned) |
 | Delete tasks | ✔ | ✔ (own only) |
 | View dashboard | ✔ | ✔ |
 
 ---
 
-## Tech Stack & Why We Chose It
+## Known Issue: OTP Emails Landing in Spam
 
-### Frontend — React 19 + Vite
+Since we're sending transactional emails from a `gmail.com` address through SendGrid's servers, some email providers (especially Gmail itself) may route the OTP emails to the **Spam** or **Promotions** folder. This happens because the sending server (SendGrid) doesn't match Gmail's SPF/DKIM records for the `gmail.com` domain.
 
-| Technology | Purpose |
-|-----------|---------|
-| **React 19** | Component-based UI library for building interactive dashboards |
-| **Vite** | Ultra-fast dev server and build tool |
-| **React Router v7** | Client-side routing with protected routes |
-| **react-icons** | Lightweight icon set (Heroicons) |
+**What to do if you don't see the OTP in your inbox:**
+1. Check your **Spam** folder
+2. Mark the email as "Not Spam" — future emails from TaskFlow should then land in your inbox
+3. Optionally, add the sender email to your contacts
 
-**Why React over Angular or Vue?**
-- React's component model is ideal for a dashboard-heavy app with reusable cards, modals, and task lists
-- Vite provides instant hot module replacement (HMR) during development — much faster than Create React App's webpack-based setup
-- React 19's improved rendering performance ensures smooth UI updates when managing large task boards
-- The largest ecosystem of libraries and community support for rapid development
-
-**Why Vite over Create React App (CRA)?**
-- CRA is officially deprecated and no longer maintained
-- Vite starts the dev server in under 1 second vs CRA's 10-30 seconds
-- Vite produces smaller, optimized production bundles with automatic code splitting
-- Native ES module support means faster builds and better tree-shaking
+**Why not use a custom domain to fix this?**
+Custom domain authentication (setting up SPF, DKIM, and DMARC records) would solve this entirely. However, for a project using free-tier services without a purchased domain, single-sender verification with a Gmail address is the practical approach. If this were a production SaaS product, domain authentication would be the first thing to set up.
 
 ---
 
-### Backend — Node.js + Express.js
+## Tech Stack
 
-| Technology | Purpose |
-|-----------|---------|
-| **Node.js** | JavaScript runtime for the server |
-| **Express.js** | Minimal, flexible web framework for REST APIs |
-| **express-validator** | Request validation middleware |
+Here's what powers the app and, more importantly, *why* I picked each piece.
 
-**Why Node.js + Express over Django, Flask, or Spring Boot?**
-- Full-stack JavaScript — same language on both frontend and backend reduces context switching and simplifies development
-- Express.js is lightweight and unopinionated, giving full control over the architecture without unnecessary boilerplate
-- Node.js excels at handling concurrent I/O operations (database queries, email sending, API calls) with its non-blocking event loop
-- Massive npm ecosystem for rapid integration of packages like JWT, bcrypt, and SendGrid
-- Perfect match for a real-time collaborative tool where multiple users interact with the same projects
+### Frontend: React 19 + Vite
 
----
+I went with **React** because the app is essentially a dashboard — lots of reusable components like task cards, project panels, modals, and stat widgets. React's component model handles that naturally. I paired it with **Vite** instead of Create React App because CRA is officially deprecated and Vite starts up in under a second (CRA used to take 15-20 seconds on my machine). **React Router v7** handles navigation and protected routes, and **react-icons** gives me clean Heroicon SVGs without bloat.
 
-### Database — MongoDB Atlas (Mongoose ODM)
+I considered Angular but it felt like overkill for this scale — too much boilerplate for a project that doesn't need dependency injection or RxJS observables. Vue was a close second, but React's ecosystem is larger and I'm more productive in it.
 
-| Technology | Purpose |
-|-----------|---------|
-| **MongoDB Atlas** | Cloud-hosted NoSQL database |
-| **Mongoose** | Object Data Modeling (ODM) with schema validation |
+### Backend: Node.js + Express.js
 
-**Why MongoDB over PostgreSQL or MySQL?**
-- Flexible schema design — tasks, projects, and users have varying fields that evolve over time; MongoDB handles schema changes without migrations
-- Document-based storage naturally maps to JSON objects used throughout the JavaScript stack
-- MongoDB Atlas provides a free tier (512 MB) with automatic backups, monitoring, and global clusters — zero database administration
-- Mongoose adds schema validation, middleware hooks (e.g., password hashing on save), and TTL indexes (auto-deleting expired OTPs)
-- Embedded documents and references make it easy to model relationships like project → members and task → assignee
-- Superior performance for read-heavy dashboard queries with built-in aggregation pipeline
+Using **Express** on **Node.js** means the entire stack speaks JavaScript. No context switching between Python and JS, no type mismatches between backend responses and frontend consumption. Express is minimal — it doesn't force an ORM, a template engine, or a specific folder structure on you. I get to design the API exactly how I want.
 
----
+Django or Flask would've worked, but they'd add a language boundary. Spring Boot was never in consideration — it's enterprise-grade tooling for a project that needs to stay lightweight. I use **express-validator** for input sanitization and validation because it plugs directly into route definitions as middleware — cleaner than importing Joi schemas or Yup objects separately.
 
-### Authentication — JWT + OTP Email Verification
+### Database: MongoDB Atlas
 
-| Technology | Purpose |
-|-----------|---------|
-| **JWT (jsonwebtoken)** | Stateless session tokens with 7-day expiry |
-| **bcryptjs** | Password hashing with salt rounds |
-| **OTP (One-Time Password)** | 6-digit email verification codes |
+The data in this app — users, projects, tasks, OTPs — maps naturally to documents. A task has a title, a description, a status, a priority, a due date, and references to a project and a user. That's a JSON object. MongoDB stores it as-is, no ORM translation layer needed.
 
-**Why JWT over session-based authentication?**
-- Stateless — no server-side session storage needed, making the app horizontally scalable
-- The token contains the user ID, so the server can verify identity without a database lookup on every request
-- Works seamlessly with single-page applications (SPAs) where the frontend stores the token in memory/localStorage
-- 7-day expiry provides a good balance between security and user convenience
+I use **Mongoose** on top for schema enforcement, pre-save hooks (like hashing passwords before storing them), and TTL indexes (OTP records auto-delete after 15 minutes — the database handles expiry, not my code). **MongoDB Atlas** hosts it for free with 512 MB storage, automatic backups, and a dashboard for monitoring queries.
 
-**Why OTP email verification over magic links or OAuth?**
-- OTP codes are simpler to implement and more reliable across email clients (some block link tracking)
-- Users can type the 6-digit code directly — no redirect flows or popup windows
-- Supports three purposes (register, login, reset) with the same mechanism, reducing code duplication
-- OTP records auto-expire after 15 minutes using MongoDB TTL indexes, ensuring security without manual cleanup
-- Works on all devices — users can receive the code on their phone and type it on their laptop
+PostgreSQL would've been fine too, but the relational model would've meant writing migrations every time I changed a field. With MongoDB, I just update the schema and move on.
 
----
+### Authentication: JWT + Email OTP
 
-### Email Service — SendGrid (Twilio)
+When a user logs in with valid credentials, the server sends a 6-digit OTP to their email. Once they enter it correctly, they receive a **JWT token** that's valid for 7 days. The token is stateless — the server doesn't store sessions, which means I can scale horizontally without worrying about sticky sessions or a Redis store.
 
-| Technology | Purpose |
-|-----------|---------|
-| **@sendgrid/mail** | Transactional email delivery via HTTPS API |
+I chose OTP over magic links because links depend on email client behavior (some clients pre-fetch URLs, which can "use up" the link). A 6-digit code that the user types manually is more reliable. I also considered OAuth (Google Sign-In), but that adds a dependency on a third-party auth provider and complicates the flow for a project that's meant to demonstrate full-stack architecture.
 
-**Why SendGrid over Nodemailer (SMTP), Brevo, or Resend?**
+Passwords are hashed with **bcryptjs** before storage — never stored in plain text.
 
-This was a critical decision driven by production deployment constraints. We evaluated multiple options:
+### Email: SendGrid (Twilio)
 
-| Service | Issue | Verdict |
-|---------|-------|---------|
-| **Nodemailer + Gmail SMTP** | Works locally, but Railway (our hosting platform) blocks SMTP ports (25, 465, 587) at the network level | ❌ Blocked in production |
-| **Brevo (Sendinblue)** | Requires manual account activation with phone verification and a review process that takes 24-48 hours | ❌ Too slow to activate |
-| **Resend** | Free tier only allows sending to the account owner's email address — useless for a multi-user app | ❌ Can't send to other users |
-| **SendGrid (Twilio)** | Free tier (100 emails/day), instant activation, uses HTTPS API (port 443) which works everywhere | ✅ **Chosen** |
+This was the hardest decision and took several iterations to get right. Here's the journey:
 
-**Key advantages of SendGrid:**
-- **HTTPS-based API** — uses port 443 (standard HTTPS), bypasses Railway's SMTP port blocking entirely
-- **Instant setup** — create account, verify sender, get API key, and start sending within minutes
-- **Free tier** — 100 emails/day is more than sufficient for a team management app
-- **Anti-spam features** — supports disabling click/open tracking (which trigger spam filters), plain text alternatives, and proper reply-to headers
-- **Official Node.js SDK** — `@sendgrid/mail` provides a clean, promise-based API with detailed error responses
-- **Reliable delivery** — Twilio's infrastructure ensures high deliverability rates
+**Attempt 1 — Nodemailer + Gmail SMTP:** Worked perfectly on localhost. Broke completely on Railway. Turns out Railway blocks all outbound SMTP ports (25, 465, 587) at the network level on their free tier. Dead end.
 
-**Anti-spam measures implemented:**
-- Plain text + HTML multipart emails (reduces spam score)
-- Click tracking and open tracking disabled (tracking links trigger spam filters)
-- Proper `replyTo` header matching the sender
-- Clean, non-promotional subject lines
+**Attempt 2 — Brevo (Sendinblue):** Has an HTTP-based API that bypasses port blocking. Created an account, generated an API key, wrote the integration. But Brevo requires manual account activation — you have to complete a phone verification process and wait for their team to review your account. That takes 24-48 hours. Didn't have that kind of time.
 
----
+**Attempt 3 — Resend:** Modern email API, great developer experience. One problem: on the free tier, you can only send emails to the email address that owns the account. So I could send OTPs to myself, but not to any other user. Useless for a multi-user app.
 
-### Deployment — Railway
+**Attempt 4 — SendGrid (Twilio):** Free tier gives 100 emails/day. Account activation is instant — verify your sender email, create an API key, and you're sending emails within minutes. The `@sendgrid/mail` package provides a clean promise-based API. Most importantly, it uses **HTTPS (port 443)** to communicate with SendGrid's servers, which works on Railway and literally every other hosting platform.
 
-| Technology | Purpose |
-|-----------|---------|
-| **Railway** | Cloud hosting platform with automatic deployments |
-| **nixpacks.toml** | Build configuration for Railway |
+**Anti-spam measures I added:**
+- Every email includes both HTML and plain text versions (multipart emails score better with spam filters)
+- Click tracking and open tracking are disabled — SendGrid's tracking links are a major spam trigger
+- The `replyTo` header matches the sender address
+- Subject lines are straightforward ("Your TaskFlow login code") rather than promotional
 
-**Why Railway over Vercel, Render, or Heroku?**
-- **Full-stack support** — Railway runs both the Express backend and serves the React frontend from the same service, unlike Vercel which is primarily frontend-focused
-- **Automatic deployments** — push to GitHub and Railway rebuilds and deploys automatically
-- **Free tier** — $5 credit/month with no credit card required, sufficient for a project of this scale
-- **Built-in environment variables** — secure dashboard for managing secrets like API keys and database URIs
-- **Custom domains** — supports custom domains with automatic SSL certificates
-- **`RAILWAY_PUBLIC_DOMAIN`** — automatically provides the public URL as an environment variable, which we use for the keep-alive self-ping
+### Hosting: Railway
 
-**Keep-alive mechanism:**
-Railway's free tier puts services to sleep after ~15 minutes of inactivity. We solve this with a built-in self-ping that hits the `/api/health` endpoint every 12 minutes, keeping the server awake 24/7 without any external cron service.
+Railway handles both the backend API and serves the built React frontend from the same service. I deploy by pushing to GitHub — Railway picks up the commit, installs dependencies, builds the client, and starts the server automatically.
 
----
+I considered Vercel, but it's optimized for serverless frontend deployments. Running a persistent Express server with WebSocket-like keep-alive behavior isn't Vercel's sweet spot. Render was an option but their free tier spins down after 15 minutes and has slower cold starts. Heroku removed their free tier entirely.
 
-### Validation — express-validator
+**The sleep problem:** Railway's free tier also sleeps services after ~15 minutes of inactivity. I solved this with a self-ping: the server hits its own `/api/health` endpoint every 12 minutes in production. It uses the `RAILWAY_PUBLIC_DOMAIN` environment variable (which Railway sets automatically), so there's no hardcoded URL and no external cron job needed.
 
-**Why express-validator over Joi or Yup?**
-- Designed specifically for Express.js — integrates directly as middleware in route definitions
-- Declarative validation chains (`.isEmail()`, `.isLength()`, `.isIn()`) are readable and self-documenting
-- Built-in sanitization (`.trim()`, `.toLowerCase()`) prevents dirty data from reaching the database
-- No additional setup — works out of the box with Express's request object
+### Styling: Custom CSS
 
----
-
-### UI Design — Custom CSS with Dark Theme
-
-**Why custom CSS over Tailwind CSS or Material UI?**
-- Full control over the design system — custom dark theme with glassmorphism effects, gradient accents, and smooth animations
-- No additional build dependencies or configuration overhead
-- Smaller bundle size compared to component libraries like Material UI
-- Design matches the modern, premium aesthetic expected from a professional project management tool
+I wrote all the styles from scratch — dark theme, glassmorphism cards, gradient accents, hover animations. No Tailwind, no Material UI. The reason is simple: I wanted full control over the visual identity. Component libraries like MUI ship a lot of CSS you don't use, and Tailwind's utility classes can make JSX hard to read when you have 15 classes on a single div. Custom CSS also means a smaller bundle.
 
 ---
 
@@ -221,235 +136,206 @@ Railway's free tier puts services to sleep after ~15 minutes of inactivity. We s
 ```
 ├── client/                     # React frontend (Vite)
 │   ├── public/
-│   │   └── favicon.svg         # Custom app icon
+│   │   └── favicon.svg
 │   ├── src/
-│   │   ├── components/         # Navbar, ProtectedRoute
-│   │   ├── context/            # Auth context with JWT handling
-│   │   ├── pages/              # All page components
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   ├── ForgotPassword.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Projects.jsx
-│   │   │   ├── ProjectDetail.jsx
-│   │   │   └── Tasks.jsx
+│   │   ├── components/         # Navbar, ProtectedRoute, Layout
+│   │   ├── context/            # AuthContext — JWT storage and user state
+│   │   ├── pages/              # Login, Register, ForgotPassword,
+│   │   │                       # Dashboard, Projects, ProjectDetail, Tasks
 │   │   ├── services/           # Axios API client
 │   │   ├── App.jsx             # Route definitions
-│   │   └── index.css           # Global styles
+│   │   └── index.css           # Global styles (dark theme)
 │   └── package.json
 │
 ├── server/                     # Express backend
-│   ├── config/
-│   │   └── db.js               # MongoDB connection
-│   ├── middleware/
-│   │   └── auth.js             # JWT verification & role guards
+│   ├── config/db.js            # MongoDB Atlas connection
+│   ├── middleware/auth.js      # JWT verification, role-based guards
 │   ├── models/
-│   │   ├── User.js             # User schema (name, email, role, isVerified)
-│   │   ├── Project.js          # Project schema (name, owner, members)
-│   │   ├── Task.js             # Task schema (title, status, priority, etc.)
-│   │   └── OTP.js              # OTP schema with TTL auto-expiry
+│   │   ├── User.js             # name, email, password (hashed), role, isVerified
+│   │   ├── Project.js          # name, description, owner, members[]
+│   │   ├── Task.js             # title, status, priority, dueDate, assignedTo
+│   │   └── OTP.js              # email, code, purpose, expiresAt (TTL)
 │   ├── routes/
-│   │   ├── auth.js             # Auth endpoints (register, login, OTP, reset)
-│   │   ├── projects.js         # Project CRUD + member management
-│   │   └── tasks.js            # Task CRUD + dashboard stats
-│   ├── utils/
-│   │   └── sendEmail.js        # SendGrid email (OTP + welcome templates)
-│   ├── seed.js                 # Initial admin account seeder
-│   ├── index.js                # Server entry point + keep-alive ping
+│   │   ├── auth.js             # Register, login, OTP verify, password reset
+│   │   ├── projects.js         # CRUD + member management
+│   │   └── tasks.js            # CRUD + dashboard stats aggregation
+│   ├── utils/sendEmail.js      # SendGrid integration
+│   ├── seed.js                 # Creates default admin on first run
+│   ├── index.js                # Entry point + keep-alive self-ping
 │   └── package.json
 │
-├── nixpacks.toml               # Railway build configuration
+├── nixpacks.toml               # Railway build config
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## API Reference
+## API Endpoints
 
-### Authentication
+### Auth
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/auth/register` | Create new account | No |
-| POST | `/api/auth/verify-register` | Verify registration OTP | No |
-| POST | `/api/auth/login` | Login and receive OTP | No |
-| POST | `/api/auth/verify-login` | Verify login OTP and get JWT | No |
-| POST | `/api/auth/forgot-password` | Request password reset OTP | No |
-| POST | `/api/auth/reset-password` | Reset password with OTP | No |
-| POST | `/api/auth/resend-otp` | Resend verification code | No |
-| GET | `/api/auth/me` | Get current user profile | Yes |
+| Method | Endpoint | What It Does |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Create account, sends verification OTP |
+| POST | `/api/auth/verify-register` | Confirm OTP, activate account |
+| POST | `/api/auth/login` | Validate credentials, sends login OTP |
+| POST | `/api/auth/verify-login` | Confirm OTP, returns JWT |
+| POST | `/api/auth/forgot-password` | Sends password reset OTP |
+| POST | `/api/auth/reset-password` | Verify OTP, set new password |
+| POST | `/api/auth/resend-otp` | Resend any OTP (register/login/reset) |
+| GET | `/api/auth/me` | Get logged-in user's profile |
 
 ### Projects
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/projects` | List user's projects | Yes |
-| POST | `/api/projects` | Create project | Admin |
-| GET | `/api/projects/:id` | Get project details | Yes |
-| PUT | `/api/projects/:id` | Update project | Admin |
-| DELETE | `/api/projects/:id` | Delete project and tasks | Admin |
-| POST | `/api/projects/:id/members` | Add member by email | Admin |
-| DELETE | `/api/projects/:id/members/:userId` | Remove member | Admin |
+| Method | Endpoint | What It Does |
+|--------|----------|-------------|
+| GET | `/api/projects` | List projects you belong to |
+| POST | `/api/projects` | Create a new project (admin only) |
+| GET | `/api/projects/:id` | Get project details with members |
+| PUT | `/api/projects/:id` | Update project info (admin only) |
+| DELETE | `/api/projects/:id` | Delete project and all its tasks (admin only) |
+| POST | `/api/projects/:id/members` | Add a member by email (admin only) |
+| DELETE | `/api/projects/:id/members/:userId` | Remove a member (admin only) |
 
 ### Tasks
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/tasks` | List tasks (with filters) | Yes |
-| POST | `/api/tasks` | Create new task | Yes |
-| GET | `/api/tasks/:id` | Get task details | Yes |
-| PUT | `/api/tasks/:id` | Update task | Yes |
-| DELETE | `/api/tasks/:id` | Delete task | Yes |
-| GET | `/api/tasks/dashboard/stats` | Get dashboard statistics | Yes |
+| Method | Endpoint | What It Does |
+|--------|----------|-------------|
+| GET | `/api/tasks` | List tasks with optional filters |
+| POST | `/api/tasks` | Create a task in a project |
+| GET | `/api/tasks/:id` | Get task details |
+| PUT | `/api/tasks/:id` | Update task fields |
+| DELETE | `/api/tasks/:id` | Delete a task |
+| GET | `/api/tasks/dashboard/stats` | Aggregated stats for the dashboard |
 
-### Health Check
+### System
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/health` | Server status and config check | No |
+| Method | Endpoint | What It Does |
+|--------|----------|-------------|
+| GET | `/api/health` | Returns server status and env config check |
 
 ---
 
-## Getting Started
+## Running It Yourself
 
-### Prerequisites
+### You'll Need
 
-- Node.js 18 or higher
-- MongoDB Atlas cluster (free tier works)
-- SendGrid account with a verified sender email (free tier — 100 emails/day)
+- Node.js 18+
+- A MongoDB Atlas cluster ([free tier works](https://www.mongodb.com/atlas))
+- A SendGrid account ([free — 100 emails/day](https://sendgrid.com))
 
-### Installation
+### Setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/SATVIK202004/team-task-manager.git
 cd team-task-manager
-
-# Install all dependencies (server + client)
 npm run install:all
 ```
 
-### Environment Setup
-
-Create a `.env` file inside the `server/` directory:
+Create `server/.env`:
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=pick_something_random_here
 NODE_ENV=development
-SENDGRID_API_KEY=your_sendgrid_api_key
-SENDGRID_FROM_EMAIL=your_verified_sender@gmail.com
+SENDGRID_API_KEY=SG.your_key_here
+SENDGRID_FROM_EMAIL=your_verified_email@gmail.com
 ```
 
-#### Getting a SendGrid API Key
+**To get the SendGrid API key:**
+1. Sign up at [sendgrid.com](https://sendgrid.com)
+2. Settings → Sender Authentication → verify your sender email
+3. Settings → API Keys → Create API Key (Full Access) → copy it
 
-1. Create a free account at [sendgrid.com](https://sendgrid.com)
-2. Go to **Settings → Sender Authentication → Single Sender Verification** and verify your email
-3. Go to **Settings → API Keys → Create API Key** with Full Access or Mail Send permission
-4. Copy the key (starts with `SG.`) and add it to your `.env`
-
-### Running Locally
+### Run
 
 ```bash
-# From the root directory — starts both server and client
 npm run dev
 ```
 
-- Backend runs on `http://localhost:5000`
-- Frontend runs on `http://localhost:5173`
+Opens the backend on `http://localhost:5000` and the frontend on `http://localhost:5173`.
 
 ---
 
-## Deployment
-
-This project is configured for **Railway** deployment using `nixpacks.toml`:
+## Deploying to Railway
 
 1. Push your code to GitHub
-2. Create a new project on [Railway](https://railway.app)
-3. Connect the GitHub repository
-4. Add the following environment variables in Railway dashboard:
+2. Create a project on [railway.app](https://railway.app) and connect the repo
+3. Add these environment variables in Railway's dashboard:
 
    | Variable | Value |
    |----------|-------|
-   | `MONGO_URI` | Your MongoDB Atlas connection string |
-   | `JWT_SECRET` | Your JWT secret key |
+   | `MONGO_URI` | Your MongoDB connection string |
+   | `JWT_SECRET` | Any strong random string |
    | `NODE_ENV` | `production` |
-   | `SENDGRID_API_KEY` | Your SendGrid API key (starts with `SG.`) |
+   | `SENDGRID_API_KEY` | Your key starting with `SG.` |
    | `SENDGRID_FROM_EMAIL` | Your verified sender email |
 
-5. Deploy — Railway handles the build and start automatically
+4. Deploy. Railway runs `npm run build` (builds the React app) then `npm start` (starts Express).
 
-> **Note:** `RAILWAY_PUBLIC_DOMAIN` is set automatically by Railway — no manual configuration needed. The keep-alive mechanism uses this variable to ping itself.
-
-### Keep-Alive
-
-The server includes a built-in **self-ping mechanism** that prevents Railway from putting the service to sleep during inactivity. In production, it pings the `/api/health` endpoint every 12 minutes using the `RAILWAY_PUBLIC_DOMAIN` variable. No external cron job or third-party service is required.
-
-### Build Process
-
-1. Installs both server and client dependencies (`npm run install:all`)
-2. Builds the React frontend with Vite (`npm run build`)
-3. Starts the Express server (`npm start`), which serves the built frontend as static files in production
+The keep-alive self-ping activates automatically in production — it reads `RAILWAY_PUBLIC_DOMAIN` (set by Railway) and pings `/api/health` every 12 minutes. No external cron needed.
 
 ---
 
-## Database Schema
+## Database Design
 
 ```
 User
-├── name (String)
-├── email (String, unique)
-├── password (String, hashed with bcryptjs)
-├── role (admin | member)
-└── isVerified (Boolean)
+├── name            String
+├── email           String, unique, lowercase
+├── password        String, bcrypt-hashed
+├── role            "admin" or "member"
+└── isVerified      Boolean (true after OTP confirmation)
 
 Project
-├── name (String)
-├── description (String)
-├── owner → User
-└── members → [User]
+├── name            String
+├── description     String
+├── owner           → User (who created it)
+└── members         → [User] (who has access)
 
 Task
-├── title (String)
-├── description (String)
-├── status (todo | in-progress | done)
-├── priority (low | medium | high)
-├── dueDate (Date)
-├── project → Project
-├── assignedTo → User
-└── createdBy → User
+├── title           String
+├── description     String
+├── status          "todo" | "in-progress" | "done"
+├── priority        "low" | "medium" | "high"
+├── dueDate         Date
+├── project         → Project
+├── assignedTo      → User
+└── createdBy       → User
 
 OTP
-├── email (String)
-├── code (String, 6-digit)
-├── purpose (register | login | reset)
-└── expiresAt (Date, TTL index — auto-deletes expired records)
+├── email           String
+├── code            String (6 digits)
+├── purpose         "register" | "login" | "reset"
+└── expiresAt       Date (TTL index — MongoDB auto-deletes after expiry)
 ```
 
 ---
 
-## Architecture Decisions Summary
+## Decision Summary
 
-| Decision | Chosen | Alternatives Considered | Reason |
-|----------|--------|------------------------|--------|
-| Frontend framework | React 19 + Vite | Angular, Vue, CRA | Fastest dev experience, largest ecosystem, CRA deprecated |
-| Backend framework | Express.js | Django, Flask, Spring Boot | Full-stack JS, lightweight, non-blocking I/O |
-| Database | MongoDB Atlas | PostgreSQL, MySQL | Flexible schema, free cloud hosting, JSON-native |
-| Auth strategy | JWT + OTP | Sessions, OAuth, Magic Links | Stateless, works with SPAs, simple multi-purpose OTP |
-| Email provider | SendGrid | Nodemailer/SMTP, Brevo, Resend | HTTPS API bypasses SMTP blocking, instant activation |
-| Hosting | Railway | Vercel, Render, Heroku | Full-stack support, auto-deploy, free tier |
-| CSS approach | Custom CSS | Tailwind, Material UI | Full design control, smaller bundle, premium dark theme |
-| Validation | express-validator | Joi, Yup | Native Express integration, declarative chains |
+For anyone reviewing the architecture, here's a quick reference of every major decision and the reasoning behind it:
+
+| What | Chose | Over | Because |
+|------|-------|------|---------|
+| UI library | React 19 | Angular, Vue | Best component model for dashboards, largest ecosystem |
+| Build tool | Vite | CRA, Webpack | CRA is deprecated, Vite is 10x faster |
+| Server | Express.js | Django, Spring Boot | Same language as frontend, minimal boilerplate |
+| Database | MongoDB | PostgreSQL | Flexible schemas, no migrations, free Atlas hosting |
+| Auth tokens | JWT | Sessions | Stateless, no Redis needed, scales horizontally |
+| Verification | Email OTP | Magic links, OAuth | More reliable across email clients, no third-party dependency |
+| Email API | SendGrid | Nodemailer, Brevo, Resend | SMTP blocked on Railway; Brevo too slow to activate; Resend can't send to other users |
+| Hosting | Railway | Vercel, Render | Full-stack support, auto-deploy from GitHub, free tier |
+| Styling | Custom CSS | Tailwind, MUI | Smaller bundle, full design control, premium dark theme |
+| Validation | express-validator | Joi, Yup | Native Express middleware, no extra setup |
 
 ---
 
 ## Author
 
 **Satvik Peddisetty**
-
----
 
 ## License
 
