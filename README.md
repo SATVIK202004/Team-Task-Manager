@@ -252,7 +252,7 @@ OTP         → email, code(6-digit), purpose(register|login|reset), expiresAt(T
 
 ## Author
 
-**Satvik Peddisetty**
+**Peddisetty Venkat Satvik**
 
 ## License
 
