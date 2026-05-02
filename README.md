@@ -4,9 +4,10 @@ A full-stack collaborative task management app built with React, Express, MongoD
 
 🔗 **Live Demo:** [team-task-manager-production-9c87.up.railway.app](https://team-task-manager-production-9c87.up.railway.app)
 
-🎥 **Demo Video:** [Watch the full walkthrough](https://drive.google.com/file/d/1gZEJghye1w3hRlFe0q7yfHUciXN4FeYJ/view?usp=sharing)
+🎥 **Demo Video:** [Watch the full walkthrough]
+(https://github.com/user-attachments/assets/ad70feca-41c4-4c83-983d-b915cbc4f1ed).
 
-> To add inline playback: Edit this README on GitHub, drag-drop your `.mp4` file below, then delete this note.
+
 
 
 ---
