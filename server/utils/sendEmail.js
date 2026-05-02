@@ -1,14 +1,21 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+// create transporter lazily so env vars are guaranteed to be loaded
+let _transporter = null;
+function getTransporter() {
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
   }
-});
+  return _transporter;
+}
 
 // send OTP verification email
 async function sendOTPEmail(to, otp, purpose) {
@@ -39,12 +46,24 @@ async function sendOTPEmail(to, otp, purpose) {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM,
-    to,
-    subject: subjects[purpose],
-    html: htmlBody
-  });
+  try {
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject: subjects[purpose],
+      html: htmlBody
+    });
+  } catch (err) {
+    console.error('Email send failed:', err.message);
+    console.error('SMTP config:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER ? '***set***' : '***MISSING***',
+      pass: process.env.SMTP_PASS ? '***set***' : '***MISSING***',
+      from: process.env.SMTP_FROM || '***MISSING***'
+    });
+    throw err;
+  }
 }
 
 // send welcome email after account activation
@@ -75,13 +94,17 @@ async function sendWelcomeEmail(to, name) {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM,
-    to,
-    subject: `Welcome to TaskFlow, ${name}!`,
-    html: htmlBody
-  });
+  try {
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject: `Welcome to TaskFlow, ${name}!`,
+      html: htmlBody
+    });
+  } catch (err) {
+    console.error('Welcome email failed:', err.message);
+    // don't rethrow — welcome email is non-critical
+  }
 }
 
 module.exports = { sendOTPEmail, sendWelcomeEmail };
-
