@@ -1,0 +1,22 @@
+{
+  "name": "team-task-manager",
+  "version": "1.0.0",
+  "description": "A full-stack team task management application with role-based access control",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "build:client": "npm --prefix client run build",
+    "start": "npm --prefix server start"
+  },
+  "keywords": [
+    "task-manager",
+    "project-management",
+    "team-collaboration"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
