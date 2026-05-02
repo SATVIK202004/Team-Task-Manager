@@ -22,6 +22,21 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));
 
+// health check for debugging deployment
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    env: {
+      NODE_ENV: process.env.NODE_ENV || 'not set',
+      MONGO_URI: process.env.MONGO_URI ? 'set' : 'MISSING',
+      JWT_SECRET: process.env.JWT_SECRET ? 'set' : 'MISSING',
+      SMTP_HOST: process.env.SMTP_HOST || 'MISSING',
+      SMTP_USER: process.env.SMTP_USER ? 'set' : 'MISSING',
+      SMTP_PASS: process.env.SMTP_PASS ? 'set' : 'MISSING'
+    }
+  });
+});
+
 // serve frontend build in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
