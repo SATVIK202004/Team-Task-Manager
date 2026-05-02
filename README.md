@@ -4,27 +4,10 @@ A full-stack collaborative task management app built with React, Express, MongoD
 
 🔗 **Live Demo:** [team-task-manager-production-9c87.up.railway.app](https://team-task-manager-production-9c87.up.railway.app)
 
----
+🎥 **Demo Video:** [Watch the full walkthrough](https://drive.google.com/file/d/1gZEJghye1w3hRlFe0q7yfHUciXN4FeYJ/view?usp=sharing)
 
-## Demo Videos
+> To add inline playback: Edit this README on GitHub, drag-drop your `.mp4` file below, then delete this note.
 
-### 🎬 Admin Walkthrough
-<!-- DRAG AND DROP YOUR ADMIN DEMO VIDEO (.mp4) BELOW THIS LINE -->
-
-
-<!-- END ADMIN VIDEO -->
-
-### 🎬 Team Member Walkthrough
-<!-- DRAG AND DROP YOUR MEMBER DEMO VIDEO (.mp4) BELOW THIS LINE -->
-
-
-<!-- END MEMBER VIDEO -->
-
-### 🎬 Full Feature Demo
-<!-- DRAG AND DROP YOUR FULL DEMO VIDEO (.mp4) BELOW THIS LINE -->
-
-
-<!-- END FULL DEMO VIDEO -->
 
 ---
 
@@ -274,7 +257,7 @@ OTP         → email, code(6-digit), purpose(register|login|reset), expiresAt(T
 
 ## Author
 
-**Peddisetty Venkat Satvik**
+**Satvik Peddisetty**
 
 ## License
 
