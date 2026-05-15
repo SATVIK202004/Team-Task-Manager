@@ -82,7 +82,7 @@ This can be fully resolved with custom domain authentication (SPF + DKIM + DMARC
 
 ### Why SendGrid for Email?
 
-We evaluated four services before landing on SendGrid:
+I evaluated four services before landing on SendGrid:
 
 | Service | Problem |
 |---------|---------|
